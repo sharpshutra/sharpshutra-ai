@@ -286,7 +286,7 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # GET SIGNAL
 
-        elif action == "get_signal":
+    elif action == "get_signal":
 
         import os
         import requests
