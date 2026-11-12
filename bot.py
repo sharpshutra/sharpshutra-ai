@@ -286,20 +286,82 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # GET SIGNAL
 
-    elif action == "get_signal":
+        elif action == "get_signal":
 
-        await query.edit_message_text(
-            "🔥 SHARPSHUTRA AI PRO\n\n"
-            f"📊 MARKET: {settings['market']}\n"
-            f"💱 PAIR: {settings['pair']}\n"
-            f"⏱️ TIMEFRAME: {settings['timeframe']}\n\n"
-            "⚠️ NO VERIFIED SIGNAL AVAILABLE.\n\n"
-            "Live market data is required before "
-            "CALL/PUT analysis can be generated.",
-            reply_markup=main_menu(user_id)
-        )
+        import os
+        import requests
+
+        api_key = os.getenv("OTCHARTS_API_KEY")
+
+        if not api_key:
+            await query.edit_message_text(
+                "❌ OTCHARTS API KEY NOT FOUND.",
+                reply_markup=main_menu(user_id)
+            )
+            return
+
+        symbol = settings["pair"]
+
+        if settings["market"] == "OTC" and not symbol.endswith("_otc"):
+            symbol = symbol.replace("/", "") + "_otc"
+
+        timeframe = settings["timeframe"]
+
+        tf_map = {
+            "5s": 5,
+            "30s": 30,
+            "1m": 60,
+            "5m": 300
+        }
+
+        tf = tf_map.get(timeframe, 60)
+
+        await query.edit_message_text("⏳ Fetching market data...")
+
+        try:
+            response = requests.get(
+                "https://otcharts.com/v1/candles",
+                headers={
+                    "Authorization": f"Bearer {api_key}"
+                },
+                params={
+                    "venue": "otc",
+                    "symbol": symbol,
+                    "tf": tf,
+                    "limit": 50
+                },
+                timeout=15
+            )
+
+            if response.status_code != 200:
+                raise Exception(
+                    f"API error: HTTP {response.status_code}"
+                )
+
+            data = response.json()
+            candles = data.get("candles", [])
+
+            if len(candles) < 20:
+                raise Exception("Not enough candle data")
+
+            await query.edit_message_text(
+                "✅ MARKET DATA RECEIVED\n\n"
+                f"Pair: {symbol}\n"
+                f"Timeframe: {timeframe}\n"
+                f"Candles received: {len(candles)}\n\n"
+                "⚠️ Signal engine is not connected yet.",
+                reply_markup=main_menu(user_id)
+            )
+
+        except Exception as e:
+            await query.edit_message_text(
+                "❌ MARKET DATA ERROR\n\n"
+                f"{str(e)[:250]}",
+                reply_markup=main_menu(user_id)
+            )
 
         return
+
 
     # MARKET ANALYSIS
 
