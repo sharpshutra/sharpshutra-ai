@@ -332,6 +332,19 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 signal = "⏳ WAIT"
 
+            from datetime import datetime
+            import csv
+
+            with open("signal_history.csv", "a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    symbol,
+                    "1m",
+                    last,
+                    signal
+                ])
+
             await query.edit_message_text(
                 "📊 SHARPSHUTRA AI PRO\n\n"
                 f"Pair: {symbol}\n"
