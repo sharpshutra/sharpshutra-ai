@@ -299,34 +299,55 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         symbol = settings["pair"].replace("/", "").upper()
 
-        await query.edit_message_text("⏳ Mengambil harga pasaran...")
+        await query.edit_message_text("⏳ Menganalisis candle...")
 
         try:
             response = requests.get(
-                f"https://biquote.io/api/{symbol}",
-                timeout=15
+                f"https://biquote.io/api/{symbol}/ohlc",
+                params={"interval": "1m", "limit": 50},
+                timeout=20
             )
             response.raise_for_status()
-            data = response.json()
 
-            if data.get("stale") or data.get("marketState") != "open":
-                raise Exception("Harga tidak terkini atau pasaran tutup.")
+            data = response.json()
+            bars = [
+                b for b in data.get("bars", [])
+                if not b.get("isOpen", False)
+            ]
+
+            bars.sort(key=lambda b: b["openTime"])
+
+            if len(bars) < 25:
+                raise Exception("Candle tidak mencukupi.")
+
+            closes = [float(b["close"]) for b in bars]
+            sma9 = sum(closes[-9:]) / 9
+            sma21 = sum(closes[-21:]) / 21
+            last = closes[-1]
+
+            if last > sma9 and sma9 > sma21:
+                signal = "🟢 CALL"
+            elif last < sma9 and sma9 < sma21:
+                signal = "🔴 PUT"
+            else:
+                signal = "⏳ WAIT"
 
             await query.edit_message_text(
-                "✅ DATA PASARAN BERJAYA DITERIMA\n\n"
+                "📊 SHARPSHUTRA AI PRO\n\n"
                 f"Pair: {symbol}\n"
-                f"Bid: {data['bid']}\n"
-                f"Ask: {data['ask']}\n"
-                f"Mid: {data['mid']}\n"
-                f"Status: {data['marketState']}\n\n"
-                "⚠️ Ini harga Forex NORMAL, bukan OTC.\n"
-                "Signal CALL/PUT belum diaktifkan.",
+                "Timeframe: 1 MINUTE\n"
+                f"Last price: {last}\n"
+                f"SMA 9: {sma9:.5f}\n"
+                f"SMA 21: {sma21:.5f}\n\n"
+                f"DEMO ANALYSIS: {signal}\n\n"
+                "⚠️ Analisis demo, bukan jaminan keuntungan.\n"
+                "Data Forex NORMAL, bukan OTC.",
                 reply_markup=main_menu(user_id)
             )
 
         except Exception as e:
             await query.edit_message_text(
-                f"❌ DATA ERROR\n\n{str(e)[:200]}",
+                f"❌ ANALYSIS ERROR\n\n{str(e)[:200]}",
                 reply_markup=main_menu(user_id)
             )
 
