@@ -24,3 +24,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           OTCHARTS_API_KEY: ${{ secrets.OTCHARTS_API_KEY }}
         run: python bot.py
+
+        
+      - name: Save Signal History
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: signal-history
+          path: signal_history.csv
+          if-no-files-found: ignore
