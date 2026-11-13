@@ -288,14 +288,47 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "get_signal":
 
-        await query.edit_message_text(
-            "⏳ SHARPSHUTRA AI PRO\n\n"
-            "Connecting to NORMAL market data...\n\n"
-            f"Pair: {settings['pair']}\n"
-            f"Timeframe: {settings['timeframe']}\n"
-            "Status: Waiting for data source.",
-            reply_markup=main_menu(user_id)
-        )
+        import requests
+
+        if settings["market"] == "OTC":
+            await query.edit_message_text(
+                "⚠️ Data OTC belum disokong.",
+                reply_markup=main_menu(user_id)
+            )
+            return
+
+        symbol = settings["pair"].replace("/", "").upper()
+
+        await query.edit_message_text("⏳ Mengambil harga pasaran...")
+
+        try:
+            response = requests.get(
+                f"https://biquote.io/api/{symbol}",
+                timeout=15
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("stale") or data.get("marketState") != "open":
+                raise Exception("Harga tidak terkini atau pasaran tutup.")
+
+            await query.edit_message_text(
+                "✅ DATA PASARAN BERJAYA DITERIMA\n\n"
+                f"Pair: {symbol}\n"
+                f"Bid: {data['bid']}\n"
+                f"Ask: {data['ask']}\n"
+                f"Mid: {data['mid']}\n"
+                f"Status: {data['marketState']}\n\n"
+                "⚠️ Ini harga Forex NORMAL, bukan OTC.\n"
+                "Signal CALL/PUT belum diaktifkan.",
+                reply_markup=main_menu(user_id)
+            )
+
+        except Exception as e:
+            await query.edit_message_text(
+                f"❌ DATA ERROR\n\n{str(e)[:200]}",
+                reply_markup=main_menu(user_id)
+            )
 
         return
 
