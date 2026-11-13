@@ -475,7 +475,23 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=main_menu(user_id)
     )
 
+async def history(update, context):
+    import os
 
+    filename = "signal_history.csv"
+
+    if not os.path.exists(filename):
+        await update.message.reply_text(
+            "Belum ada rekod signal."
+        )
+        return
+
+    with open(filename, "rb") as file:
+        await update.message.reply_document(
+            document=file,
+            filename="signal_history.csv",
+            caption="📊 SHARPSHUTRA AI PRO - SIGNAL HISTORY"
+        )
 def main():
 
     if not TOKEN:
