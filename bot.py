@@ -288,17 +288,19 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "get_signal":
 
-        import os
-        import requests
+        await query.edit_message_text(
+            "🔥 SHARPSHUTRA AI PRO\n\n"
+            "🟢 TELEGRAM BOT: ONLINE\n"
+            "🟡 MARKET DATA: NOT CONNECTED\n\n"
+            f"📊 MARKET: {settings['market']}\n"
+            f"💱 PAIR: {settings['pair']}\n"
+            f"⏱️ TIMEFRAME: {settings['timeframe']}\n\n"
+            "⚠️ LIVE SIGNAL TEMPORARILY UNAVAILABLE.\n"
+            "Waiting for verified market data.",
+            reply_markup=main_menu(user_id)
+        )
 
-        api_key = os.getenv("OTCHARTS_API_KEY")
-
-        if not api_key:
-            await query.edit_message_text(
-                "❌ OTCHARTS API KEY NOT FOUND.",
-                reply_markup=main_menu(user_id)
-            )
-            return
+        return 
 
         symbol = settings["pair"]
 
