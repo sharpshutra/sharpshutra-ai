@@ -289,18 +289,15 @@ async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action == "get_signal":
 
         await query.edit_message_text(
-            "🔥 SHARPSHUTRA AI PRO\n\n"
-            "🟢 TELEGRAM BOT: ONLINE\n"
-            "🟡 MARKET DATA: NOT CONNECTED\n\n"
-            f"📊 MARKET: {settings['market']}\n"
-            f"💱 PAIR: {settings['pair']}\n"
-            f"⏱️ TIMEFRAME: {settings['timeframe']}\n\n"
-            "⚠️ LIVE SIGNAL TEMPORARILY UNAVAILABLE.\n"
-            "Waiting for verified market data.",
+            "⏳ SHARPSHUTRA AI PRO\n\n"
+            "Connecting to NORMAL market data...\n\n"
+            f"Pair: {settings['pair']}\n"
+            f"Timeframe: {settings['timeframe']}\n"
+            "Status: Waiting for data source.",
             reply_markup=main_menu(user_id)
         )
 
-        return 
+        return
 
         symbol = settings["pair"]
 
